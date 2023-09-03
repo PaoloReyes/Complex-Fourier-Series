@@ -1,20 +1,26 @@
 from manim import *
+from xml.dom import minidom
 import svg.path
 
 #Function variables
 time = np.arange(-40, 40, 0.01)
-path = '''M 10,30
-        A 20,20 0,0,1 50,30
-        A 20,20 0,0,1 90,30
-        Q 90,60 50,90
-        Q 10,60 10,30 z'''
+svg_file = open("fourier.svg")
+doc = minidom.parse(svg_file)
+path_strings = [path.getAttribute('d') for path
+                in doc.getElementsByTagName('path')]
+doc.unlink()
+path = path_strings[0]
 pp = svg.path.parse_path(path)
-func = [-pp.point(pos)+50+50j for pos in np.linspace(0, 1, len(time))]
+func = [-pp.point(pos) for pos in np.linspace(0, 1, len(time))]
+center_real = (max(np.real(func))+min(np.real(func)))/2
+center_imag = (max(np.imag(func))+min(np.imag(func)))/2
+func = [-pp.point(pos)-center_real-1j*center_imag for pos in np.linspace(0, 1, len(time))]
 T = 8
 w0 = 2*np.pi/T
+COLOR = "#00FF00"
 
 #Approximation variables
-iterations = 400
+iterations = 150
 
 class Fourier(Scene):
     def calculateFn(self, f, n, t):
@@ -39,8 +45,8 @@ class Fourier(Scene):
 
     def construct(self):
         axes = Axes(
-            x_range = [-70, 70, 14],
-            y_range = [-70, 70, 14],
+            x_range = [min(np.real(func)), max(np.real(func)), (max(np.real(func))-min(np.real(func)))/8],
+            y_range = [min(np.imag(func)), max(np.imag(func)), (max(np.imag(func))-min(np.imag(func)))/8],
             x_length = 10,
             axis_config = {"include_numbers": False},
             tips=False,
@@ -53,7 +59,7 @@ class Fourier(Scene):
             graph = axes.plot_line_graph(
                 x_values = f_real,
                 y_values = f_imag,
-                line_color = RED,
+                line_color = COLOR,
                 add_vertex_dots = False,
             )
             plot = VGroup(axes, graph)
@@ -63,17 +69,15 @@ class Fourier(Scene):
                 self.add(plot, iterationLabel)
                 self.wait(0.3)
             elif idx < 10:
-                self.play(ReplacementTransform(previousPlot, plot), run_time=0.1)
-                self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=0.1)
+                run_time = 0.1
             elif idx < 20:
-                self.play(ReplacementTransform(previousPlot, plot), run_time=0.025)
-                self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=0.025)
+                run_time = 0.025
             elif idx < 50:
-                self.play(ReplacementTransform(previousPlot, plot), run_time=0.01)
-                self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=0.01)
+                run_time = 0.01
             else:
-                self.play(ReplacementTransform(previousPlot, plot), run_time=0.001)
-                self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=0.001)
+                run_time = 0.001
 
+            self.play(ReplacementTransform(previousPlot, plot), run_time=run_time)
+            self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=run_time)
             previousPlot = plot
             previousiterationLabel = iterationLabel
