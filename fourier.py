@@ -20,7 +20,7 @@ w0 = 2*np.pi/T
 COLOR = "#00FF00"
 
 #Approximation variables
-iterations = 150
+iterations = 10
 
 class Fourier(Scene):
     def calculateFn(self, f, n, t):
@@ -45,7 +45,7 @@ class Fourier(Scene):
 
     def construct(self):
         axes = Axes(
-            x_range = [min(np.real(func)), max(np.real(func)), (max(np.real(func))-min(np.real(func)))/8],
+            x_range = [min(np.real(func))*1.5, max(np.real(func))*1.5, (max(np.real(func))-min(np.real(func)))/8],
             y_range = [min(np.imag(func)), max(np.imag(func)), (max(np.imag(func))-min(np.imag(func)))/8],
             x_length = 10,
             axis_config = {"include_numbers": False},
@@ -65,10 +65,7 @@ class Fourier(Scene):
             plot = VGroup(axes, graph)
             iterationLabel = Tex(f'Iteration = {idx}').shift(3*UP+3.5*RIGHT)
 
-            if idx == 0:
-                self.add(plot, iterationLabel)
-                self.wait(0.3)
-            elif idx < 10:
+            if idx < 10:
                 run_time = 0.1
             elif idx < 20:
                 run_time = 0.025
@@ -76,8 +73,12 @@ class Fourier(Scene):
                 run_time = 0.01
             else:
                 run_time = 0.001
-
-            self.play(ReplacementTransform(previousPlot, plot), run_time=run_time)
-            self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=run_time)
+            if idx != 0:
+                self.play(ReplacementTransform(previousPlot, plot), run_time=run_time)
+                self.play(ReplacementTransform(previousiterationLabel, iterationLabel), run_time=run_time)
+            else:
+                self.add(plot, iterationLabel)
+                self.wait(0.3)
+                
             previousPlot = plot
             previousiterationLabel = iterationLabel
